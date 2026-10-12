@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0a0e1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>ScanSpeak – Học Tiếng Anh Qua Camera</title>
+  <meta name="description" content="Trỏ camera vào chữ tiếng Anh, ứng dụng tự đọc to và dịch sang tiếng Việt." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <div class="orb o1"></div>
+  <div class="orb o2"></div>
+  <div class="orb o3"></div>
+
+  <canvas id="ocrCanvas"></canvas>
+  <div class="toast" id="toast"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+     HTTPS NOTICE (shown when not on secure context on mobile)
+     ══════════════════════════════════════════════════════════ -->
+  <!-- Camera Permission Notice (shown only if camera is denied) -->
+  <div class="https-notice hidden" id="httpsNotice">
+    <div class="https-icon">📷</div>
+    <div class="https-title">Chưa cấp quyền Camera</div>
+    <div class="https-desc">
+      Trình duyệt cần quyền truy cập Camera để quét chữ tiếng Anh trực tiếp.<br><br>
+      Vui lòng nhấn vào biểu tượng <strong>Ổ khóa 🔒</strong> trên thanh địa chỉ của trình duyệt, chọn <strong>Quyền trang web</strong> → Bật <strong>Camera</strong>.
+    </div>
+    <button class="btn-ok" onclick="tryAnyway()">Thử lại</button>
+    <button class="btn-ok-sec" onclick="switchToFileMode()">📁 Dùng Chụp ảnh / Tải ảnh lên</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+     SETTINGS SHEET
+     ══════════════════════════════════════════════════════════ -->
+  <div class="sheet-wrap" id="sheetWrap">
+    <div class="sheet-bg" onclick="closeSettings()"></div>
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">⚙️ Cài đặt</div>
+      <div class="s-row">
+        <div>
+          <div class="s-label">🗣️ Giọng đọc AI</div>
+          <div class="s-sub">Chọn giọng cho bé hoặc người lớn</div>
+        </div>
+        <select class="voice-select" id="voicePersona" onchange="setVoicePersona(this.value)">
+          <option value="kids">👧 Trẻ em (Trong trẻo, đọc chậm)</option>
+          <option value="female" selected>👩‍🏫 Cô giáo (Chuẩn Mỹ, rõ ràng)</option>
+          <option value="male">👨‍🏫 Thầy giáo (Trầm ấm, chuẩn Mỹ)</option>
+          <option value="british">🇬🇧 Anh - Anh (Chuẩn Oxford)</option>
+        </select>
+      </div>
+      <div class="s-row" style="margin-bottom:12px;">
+        <button class="btn-test-voice" onclick="testVoice()">▶️ Nghe thử giọng đã chọn</button>
+      </div>
+      <div class="s-row">
+        <div>
+          <div class="s-label">🔊 Tự động đọc</div>
+          <div class="s-sub">Đọc ngay sau khi quét</div>
+        </div>
+        <div class="toggle on" id="togRead" onclick="tog('autoRead',this)">
+          <div class="toggle-k"></div>
+        </div>
+      </div>
+      <div class="s-row">
+        <div>
+          <div class="s-label">🌐 Dịch tự động</div>
+          <div class="s-sub">Dịch sang tiếng Việt</div>
+        </div>
+        <div class="toggle on" id="togTrans" onclick="tog('autoTranslate',this)">
+          <div class="toggle-k"></div>
+        </div>
+      </div>
+      <div class="s-row">
+        <div>
+          <div class="s-label">🇬🇧 Tốc độ giọng đọc</div>
+          <div class="s-sub">Chậm ↔ Nhanh</div>
+        </div>
+        <input type="range" class="speed-slider" id="speedSlider" min="0.5" max="1.5" step="0.1" value="0.85"
+          oninput="setSpeed(this.value)" />
+      </div>
+      <div class="s-row">
+        <div>
+          <div class="s-label">⏱ Khoảng quét tự động</div>
+          <div class="s-sub">Giây giữa mỗi lần quét</div>
+        </div>
+        <input type="range" class="speed-slider" id="autoInterval" min="2" max="8" step="1" value="4"
+          oninput="setInterval_(this.value)" />
+      </div>
+      <div class="s-row">
+        <div>
+          <div class="s-label">📌 Tự động ghim</div>
+          <div class="s-sub">Giữ lại kết quả mới</div>
+        </div>
+        <div class="toggle" id="togPin" onclick="tog('autoPin',this)">
+          <div class="toggle-k"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+     HEADER
+     ══════════════════════════════════════════════════════════ -->
+  <header>
+    <div class="logo">
+      <div class="logo-ico">📸</div>
+      <div>
+        <div class="logo-name">ScanSpeak</div>
+        <div class="logo-sub">Học tiếng Anh qua camera</div>
+      </div>
+    </div>
+    <div class="hdr-btns">
+      <div class="ico-btn" id="flipBtn" onclick="flipCam()" title="Đổi camera">🔄</div>
+      <div class="ico-btn" onclick="openSettings()" title="Cài đặt">⚙️</div>
+      <div class="ico-btn" onclick="clearAll()" title="Xóa lịch sử">🗑️</div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════
+     MAIN
+     ══════════════════════════════════════════════════════════ -->
+  <main>
+
+    <!-- Camera section -->
+    <div class="cam-section">
+
+      <!-- Off placeholder -->
+      <div class="cam-off" id="camOff">
+        <div class="cam-off-icon">📷</div>
+        <p>Nhấn <strong>Bật camera</strong> rồi nhấn nút quét hoặc bật <strong>Tự động</strong></p>
+      </div>
+
+      <!-- Live video -->
+      <video id="video" autoplay playsinline muted style="display:none;"></video>
+
+      <!-- Overlay -->
+      <div class="cam-overlay" id="camOverlay" style="display:none;">
+        <div class="frame-mode-bar">
+          <button class="f-mode-btn" id="fModeWord" onclick="setFrameMode('word')">🔤 1 Từ đơn</button>
+          <button class="f-mode-btn active" id="fModeSentence" onclick="setFrameMode('sentence')">📝 Cả câu</button>
+        </div>
+        <span class="cam-label" id="camLabel" style="display:none;"></span>
+        <div class="scan-frame" id="scanFrame">
+          <div class="corner-box cb-tl"></div>
+          <div class="corner-box cb-tr"></div>
+          <div class="corner-box cb-bl"></div>
+          <div class="corner-box cb-br"></div>
+          <div class="scan-line" id="scanLine"></div>
+          <div class="frame-hint" id="frameHint">🎯 CHỈ QUÉT CHỮ TRONG Ô NÀY</div>
+        </div>
+        <div class="auto-badge" id="autoBadge">
+          <div class="pulse-dot"></div>
+          <span id="autoCountdown">Tự động quét</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls bar -->
+    <div class="ctrl-bar">
+      <!-- Start/stop camera -->
+      <button class="btn-cam" id="btnCam" onclick="toggleCam()">
+        <span id="btnCamIcon">📷</span>
+        <span id="btnCamText">Bật camera</span>
+      </button>
+
+      <!-- Main capture -->
+      <button class="btn-capture" id="btnCapture" onclick="captureNow()" disabled title="Quét ngay">
+        🔍
+      </button>
+
+      <!-- Auto toggle -->
+      <button class="btn-auto" id="btnAuto" onclick="toggleAuto()" disabled>
+        <span>⚡</span>
+        <span id="btnAutoText">Tự động</span>
+      </button>
+    </div>
+
+    <!-- Results -->
+    <div class="results" id="results">
+      <div class="empty" id="emptyState">
+        <div class="empty-icon">🔍</div>
+        <h3>Chưa có kết quả</h3>
+        <p>Bật camera, trỏ vào chữ tiếng Anh rồi nhấn 🔍 để quét!</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Hidden file input fallback -->
+  <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none;" />
+
+  <!-- Tesseract OCR Library -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+
+</html>
