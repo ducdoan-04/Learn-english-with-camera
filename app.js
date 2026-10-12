@@ -20,7 +20,7 @@ const S = {
     autoTranslate: true,
     autoPin: false,
     speed: 0.85,
-    voicePersona: 'female'
+    voicePersona: 'google'
   }
 };
 
@@ -382,24 +382,48 @@ function similar(a, b) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// TRANSLATION
+// TRANSLATION (GOOGLE TRANSLATE API + FALLBACK)
 // ═══════════════════════════════════════════════════════════
 async function translate(text) {
+  const cleanText = text.slice(0, 1000).trim();
+  if (!cleanText) return '';
+
+  // 1. Google Translate API chính hãng (chuẩn xác tự nhiên 100%)
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q=${encodeURIComponent(cleanText)}`;
+    const r = await fetch(url);
+    if (r.ok) {
+      const data = await r.json();
+      if (Array.isArray(data) && Array.isArray(data[0])) {
+        const trans = data[0].map(item => item[0]).filter(Boolean).join('');
+        if (trans.trim()) return trans.trim();
+      }
+    }
+  } catch (err) {
+    console.warn('Google Translate API error, falling back:', err);
+  }
+
+  // 2. Dự phòng qua MyMemory nếu mạng hạn chế Google
   try {
     const r = await fetch(
-      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.slice(0, 500))}&langpair=en|vi`
+      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanText.slice(0, 400))}&langpair=en|vi`
     );
     const j = await r.json();
-    if (j.responseStatus === 200 && j.responseData.translatedText) return j.responseData.translatedText;
-  } catch (e) { }
+    if (j.responseStatus === 200 && j.responseData.translatedText) {
+      return j.responseData.translatedText;
+    }
+  } catch (_) { }
+
   return '(Không thể dịch – kiểm tra mạng)';
 }
 
 // ═══════════════════════════════════════════════════════════
-// TTS (TEXT TO SPEECH) - VOICE PERSONAS FOR KIDS & ADULTS
+// TTS (TEXT TO SPEECH) - GOOGLE TRANSLATE VOICE & PERSONAS
 // ═══════════════════════════════════════════════════════════
+let currentAudio = null;
+
 function getVoiceProfile() {
-  const persona = S.cfg.voicePersona || 'female';
+  const persona = S.cfg.voicePersona || 'google';
   const vv = window.speechSynthesis ? speechSynthesis.getVoices() : [];
 
   let selectedVoice = null;
@@ -424,7 +448,7 @@ function getVoiceProfile() {
     rate = S.cfg.speed;
     selectedVoice = vv.find(v => (v.lang === 'en-GB' || v.lang.startsWith('en-GB') || v.name.includes('UK') || v.name.includes('George') || v.name.includes('Oliver') || v.name.includes('Hazel')))
       || vv.find(v => v.lang.startsWith('en'));
-  } else {
+  } else if (persona === 'female') {
     // Giọng nữ cô giáo người lớn chuẩn Mỹ (female)
     pitch = 1.05;
     rate = S.cfg.speed;
@@ -441,62 +465,151 @@ function getVoiceProfile() {
 }
 
 function stopAllAudio(cardId) {
-  if (window.speechSynthesis) speechSynthesis.cancel();
+  if (currentAudio) {
+    try {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    } catch (_) { }
+    currentAudio = null;
+  }
+  if (window.speechSynthesis) {
+    speechSynthesis.cancel();
+  }
   if (cardId) {
     const bNormal = document.querySelector(`[data-speak="${cardId}"]`);
     const bSlow = document.querySelector(`[data-speak-slow="${cardId}"]`);
+    const bVi = document.querySelector(`[data-speak-vi="${cardId}"]`);
     if (bNormal) { bNormal.classList.remove('playing'); bNormal.textContent = '🔊'; }
     if (bSlow) { bSlow.classList.remove('playing'); bSlow.textContent = '🐢'; }
+    if (bVi) { bVi.classList.remove('playing'); }
   }
+}
+
+// Phát âm dùng trực tiếp âm thanh chuẩn của Google Translate TTS
+function playGoogleTts(text, lang = 'en', slow = false, cardId = null, btnType = 'normal') {
+  stopAllAudio(cardId);
+  const q = encodeURIComponent(text.slice(0, 200).trim());
+  const directUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${lang}&client=tw-ob&q=${q}`;
+  const proxyUrl = `/api/tts?tl=${lang}&q=${q}`;
+
+  const audio = new Audio();
+  audio.referrerPolicy = 'no-referrer';
+  audio.playbackRate = slow ? 0.6 : (S.cfg.speed || 1.0);
+  currentAudio = audio;
+
+  let btn = null;
+  if (cardId) {
+    if (btnType === 'normal') btn = document.querySelector(`[data-speak="${cardId}"]`);
+    else if (btnType === 'slow') btn = document.querySelector(`[data-speak-slow="${cardId}"]`);
+    else if (btnType === 'vi') btn = document.querySelector(`[data-speak-vi="${cardId}"]`);
+  }
+
+  if (btn) {
+    btn.classList.add('playing');
+    if (btnType === 'normal' || btnType === 'slow') btn.textContent = '⏸';
+  }
+
+  const cleanup = () => {
+    if (btn) {
+      btn.classList.remove('playing');
+      if (btnType === 'normal') btn.textContent = '🔊';
+      else if (btnType === 'slow') btn.textContent = '🐢';
+    }
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  audio.onended = cleanup;
+
+  let triedProxy = false;
+  const tryFallback = () => {
+    // If direct Google fails and we're not on standalone localhost, try Vercel /api/tts proxy
+    if (!triedProxy && location.protocol.startsWith('http')) {
+      triedProxy = true;
+      audio.src = proxyUrl;
+      audio.play().catch(() => {
+        cleanup();
+        if (lang === 'en') speakWithSpeechSynthesis(text, cardId, slow);
+      });
+      return;
+    }
+    cleanup();
+    if (lang === 'en') speakWithSpeechSynthesis(text, cardId, slow);
+  };
+
+  audio.onerror = tryFallback;
+
+  audio.src = directUrl;
+  audio.play().catch(tryFallback);
+
+  if (slow) showToast('🐢 Đang đọc chậm Google (0.6x)');
+}
+
+function speakWithSpeechSynthesis(text, cardId, slow = false) {
+  if (!window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(text);
+  const profile = getVoiceProfile();
+  u.lang = S.cfg.voicePersona === 'british' ? 'en-GB' : 'en-US';
+  u.pitch = profile.pitch;
+  u.rate = slow ? 0.55 : profile.rate;
+  if (profile.voice) u.voice = profile.voice;
+
+  let btn = null;
+  if (cardId) {
+    btn = document.querySelector(slow ? `[data-speak-slow="${cardId}"]` : `[data-speak="${cardId}"]`);
+    if (btn) {
+      btn.classList.add('playing');
+      btn.textContent = '⏸';
+    }
+    const end = () => {
+      if (btn) {
+        btn.classList.remove('playing');
+        btn.textContent = slow ? '🐢' : '🔊';
+      }
+    };
+    u.onend = end;
+    u.onerror = end;
+  }
+
+  speechSynthesis.speak(u);
+  if (slow) showToast('🐢 Đang đọc chậm (0.55x)');
 }
 
 function speak(text, cardId) {
-  if (!window.speechSynthesis) return;
+  if (!text) return;
   stopAllAudio(cardId);
 
-  const u = new SpeechSynthesisUtterance(text);
-  const profile = getVoiceProfile();
-  u.lang = S.cfg.voicePersona === 'british' ? 'en-GB' : 'en-US';
-  u.pitch = profile.pitch;
-  u.rate = profile.rate;
-  if (profile.voice) u.voice = profile.voice;
-
-  if (cardId) {
-    const btn = document.querySelector(`[data-speak="${cardId}"]`);
-    if (btn) { btn.classList.add('playing'); btn.textContent = '⏸'; }
-    u.onend = () => { if (btn) { btn.classList.remove('playing'); btn.textContent = '🔊'; } };
-    u.onerror = () => { if (btn) { btn.classList.remove('playing'); btn.textContent = '🔊'; } };
+  const persona = S.cfg.voicePersona || 'google';
+  if (persona === 'google') {
+    playGoogleTts(text, 'en', false, cardId, 'normal');
+  } else {
+    speakWithSpeechSynthesis(text, cardId, false);
   }
-  speechSynthesis.speak(u);
 }
 
 function speakSlow(text, cardId) {
-  if (!window.speechSynthesis) return;
+  if (!text) return;
   stopAllAudio(cardId);
 
-  const u = new SpeechSynthesisUtterance(text);
-  const profile = getVoiceProfile();
-  u.lang = S.cfg.voicePersona === 'british' ? 'en-GB' : 'en-US';
-  u.pitch = profile.pitch;
-  // Đọc chậm rõ từng âm (0.55x) để học phát âm / cho trẻ nhỏ
-  u.rate = 0.55;
-  if (profile.voice) u.voice = profile.voice;
-
-  if (cardId) {
-    const btn = document.querySelector(`[data-speak-slow="${cardId}"]`);
-    if (btn) { btn.classList.add('playing'); btn.textContent = '⏸'; }
-    u.onend = () => { if (btn) { btn.classList.remove('playing'); btn.textContent = '🐢'; } };
-    u.onerror = () => { if (btn) { btn.classList.remove('playing'); btn.textContent = '🐢'; } };
+  const persona = S.cfg.voicePersona || 'google';
+  if (persona === 'google') {
+    playGoogleTts(text, 'en', true, cardId, 'slow');
+  } else {
+    speakWithSpeechSynthesis(text, cardId, true);
   }
-  speechSynthesis.speak(u);
-  showToast('🐢 Đang đọc chậm (0.55x)');
+}
+
+function speakVi(text, cardId) {
+  if (!text || text.startsWith('(')) return;
+  stopAllAudio(cardId);
+  playGoogleTts(text, 'vi', false, cardId, 'vi');
 }
 
 function setVoicePersona(persona) {
   S.cfg.voicePersona = persona;
   const names = {
-    kids: '👧 Trẻ em (Trong trẻo, đọc chậm)',
+    google: '🌐 Google Dịch (Chuẩn quốc tế, tự nhiên nhất)',
     female: '👩‍🏫 Cô giáo (Chuẩn Mỹ, rõ ràng)',
+    kids: '👧 Trẻ em (Trong trẻo, đọc chậm)',
     male: '👨‍🏫 Thầy giáo (Trầm ấm, chuẩn Mỹ)',
     british: '🇬🇧 Anh - Anh (Chuẩn Oxford)'
   };
@@ -505,14 +618,20 @@ function setVoicePersona(persona) {
 }
 
 function testVoice() {
+  const persona = S.cfg.voicePersona || 'google';
   const msgs = {
-    kids: "Hello! Let's learn English together! Apple, Cat, Dog!",
+    google: "Hello! This is Google Translate voice. Practice English every single day!",
     female: "Hello! Welcome to English learning. Practice pronunciation with me.",
+    kids: "Hello! Let's learn English together! Apple, Cat, Dog!",
     male: "Good day! Speaking English clearly and confidently every single day.",
     british: "Hello! Splendid job practicing your English pronunciation."
   };
-  const text = msgs[S.cfg.voicePersona] || msgs.female;
-  speak(text, null);
+  const text = msgs[persona] || msgs.google;
+  if (persona === 'google') {
+    playGoogleTts(text, 'en', false, null, 'normal');
+  } else {
+    speakWithSpeechSynthesis(text, null, false);
+  }
 }
 
 async function speakWord(word) {
@@ -539,7 +658,10 @@ function renderCard(r) {
 
   const viHtml = r.vietnamese
     ? `<div class="divider"><div class="div-line"></div><div class="div-ico">🇻🇳</div><div class="div-line"></div></div>
-       <div class="vi-text">${esc(r.vietnamese)}</div>`
+       <div class="vi-row">
+         <div class="vi-text">${esc(r.vietnamese)}</div>
+         <button class="vi-speak-btn" data-speak-vi="${r.id}" onclick="speakVi('${escJs(r.vietnamese)}', ${r.id})" title="Nghe đọc tiếng Việt (Google)">🔊</button>
+       </div>`
     : '';
 
   const thumbHtml = r.thumb

@@ -954,11 +954,51 @@ main {
   color: var(--muted);
 }
 
+.vi-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .vi-text {
   font-size: .88rem;
   color: var(--text2);
   line-height: 1.6;
   font-style: italic;
+  flex: 1;
+}
+
+.vi-speak-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all .2s;
+}
+
+.vi-speak-btn:hover {
+  background: rgba(0, 230, 200, 0.12);
+  border-color: rgba(0, 230, 200, 0.35);
+  color: var(--accent);
+}
+
+.vi-speak-btn:active {
+  transform: scale(0.88);
+}
+
+.vi-speak-btn.playing {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(0, 230, 200, 0.18);
 }
 
 .chips {

@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#0a0e1a" />
+  <meta name="referrer" content="no-referrer" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>ScanSpeak – Học Tiếng Anh Qua Camera</title>
@@ -55,8 +56,9 @@
           <div class="s-sub">Chọn giọng cho bé hoặc người lớn</div>
         </div>
         <select class="voice-select" id="voicePersona" onchange="setVoicePersona(this.value)">
+          <option value="google" selected>🌐 Google Dịch (Chuẩn quốc tế, tự nhiên nhất)</option>
+          <option value="female">👩‍🏫 Cô giáo (Chuẩn Mỹ, rõ ràng)</option>
           <option value="kids">👧 Trẻ em (Trong trẻo, đọc chậm)</option>
-          <option value="female" selected>👩‍🏫 Cô giáo (Chuẩn Mỹ, rõ ràng)</option>
           <option value="male">👨‍🏫 Thầy giáo (Trầm ấm, chuẩn Mỹ)</option>
           <option value="british">🇬🇧 Anh - Anh (Chuẩn Oxford)</option>
         </select>
