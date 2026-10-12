@@ -202,7 +202,7 @@ function updateCountdown() {
 // CAPTURE & OCR
 // ═══════════════════════════════════════════════════════════
 // Switch frame size mode (word vs sentence)
-function setFrameMode(mode) {
+function setFrameMode(mode, silent = false) {
   const isWord = mode === 'word';
   const sf = document.getElementById('scanFrame');
   const hint = document.getElementById('frameHint');
@@ -210,7 +210,7 @@ function setFrameMode(mode) {
   document.getElementById('fModeWord').classList.toggle('active', isWord);
   document.getElementById('fModeSentence').classList.toggle('active', !isWord);
   if (hint) hint.textContent = isWord ? '🎯 1 TỪ / 1 DÒNG' : '🎯 CHỈ QUÉT CHỮ TRONG Ô NÀY';
-  showToast(isWord ? '🔤 Ô quét 1 từ (nhỏ gọn)' : '📝 Ô quét cả câu (tiêu chuẩn)');
+  if (!silent) showToast(isWord ? '🔤 Ô quét 1 từ (nhỏ gọn)' : '📝 Ô quét cả câu (tiêu chuẩn)');
 }
 
 async function captureNow() {
@@ -555,19 +555,23 @@ function renderCard(r) {
   el.innerHTML = `
     <div class="card-head">
       <span class="badge">🇬🇧 Tiếng Anh</span>
-      <div class="card-acts">
+      <div class="card-head-right">
         <span class="conf ${cls}">${lbl} ${r.confidence}%</span>
-        <div class="act-btn ${r.pinned ? 'pinned' : ''}" data-pin="${r.id}" onclick="togglePin(${r.id})" title="Ghim">${r.pinned ? '📌' : '📍'}</div>
-        <div class="act-btn" data-speak="${r.id}" onclick="speak('${escJs(r.english)}',${r.id})" title="Đọc bình thường">🔊</div>
-        <div class="act-btn btn-slow" data-speak-slow="${r.id}" onclick="speakSlow('${escJs(r.english)}',${r.id})" title="Đọc chậm từng chữ (0.55x)">🐢</div>
-        <div class="act-btn" onclick="delCard(${r.id})" title="Xóa">🗑</div>
+        <div class="head-act-btn ${r.pinned ? 'pinned' : ''}" data-pin="${r.id}" onclick="togglePin(${r.id})" title="Ghim">${r.pinned ? '📌' : '📍'}</div>
+        <div class="head-act-btn btn-del" onclick="delCard(${r.id})" title="Xóa">🗑</div>
       </div>
     </div>
-    <div class="card-body">
-      ${thumbHtml}
-      <div class="en-text">${esc(r.english)}</div>
-      ${chipsHtml}
-      ${viHtml}
+    <div class="card-main">
+      <div class="card-content">
+        ${thumbHtml}
+        <div class="en-text">${esc(r.english)}</div>
+        ${chipsHtml}
+        ${viHtml}
+      </div>
+      <div class="card-side-acts">
+        <div class="act-btn" data-speak="${r.id}" onclick="speak('${escJs(r.english)}',${r.id})" title="Đọc bình thường">🔊</div>
+        <div class="act-btn btn-slow" data-speak-slow="${r.id}" onclick="speakSlow('${escJs(r.english)}',${r.id})" title="Đọc chậm từng chữ (0.55x)">🐢</div>
+      </div>
     </div>
     <div class="card-foot"><span class="card-time">${r.time}</span></div>
   `;
@@ -779,3 +783,6 @@ function esc(s) {
 function escJs(s) {
   return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n');
 }
+
+// Default to single word mode on launch
+setFrameMode('word', true);

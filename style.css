@@ -1,4 +1,5 @@
 :root {
+  color-scheme: dark;
   --bg: #0a0e1a;
   --bg2: #111827;
   --card: rgba(255, 255, 255, 0.04);
@@ -733,7 +734,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 9px 12px 7px;
+  padding: 8px 14px 6px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -746,12 +747,6 @@ main {
   background: rgba(0, 230, 200, .1);
   padding: 2px 8px;
   border-radius: 20px;
-}
-
-.card-acts {
-  display: flex;
-  gap: 5px;
-  align-items: center;
 }
 
 .conf {
@@ -776,19 +771,102 @@ main {
   color: var(--err);
 }
 
-.act-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+/* Header right: [Tốt %] [Pin] [Delete] horizontally */
+.card-head-right {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.head-act-btn {
+  width: 25px;
+  height: 25px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, .05);
   border: 1px solid var(--border);
   color: var(--text2);
   font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .18s;
+  user-select: none;
+}
+
+.head-act-btn:hover {
+  background: rgba(255, 255, 255, .1);
+  border-color: rgba(255, 255, 255, .2);
+  transform: scale(1.05);
+}
+
+.head-act-btn:active {
+  transform: scale(.88);
+}
+
+.head-act-btn.pinned {
+  color: var(--accent2);
+  border-color: rgba(108, 99, 255, .4);
+  background: rgba(108, 99, 255, .15);
+}
+
+.head-act-btn.btn-del:hover {
+  border-color: rgba(255, 90, 90, .4);
+  color: var(--err);
+}
+
+.head-act-btn.btn-del:active {
+  color: var(--err);
+  border-color: rgba(255, 90, 90, .5);
+  background: rgba(255, 90, 90, .15);
+}
+
+/* Main card row: left content + right vertical reading buttons */
+.card-main {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Vertical action buttons on the right side */
+.card-side-acts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  flex-shrink: 0;
+  padding-left: 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.act-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all .18s;
+}
+
+.act-btn:hover {
+  background: rgba(255, 255, 255, .1);
+  border-color: rgba(255, 255, 255, .2);
+  transform: scale(1.04);
 }
 
 .act-btn:active {
@@ -797,11 +875,12 @@ main {
 
 .act-btn.playing {
   color: var(--accent);
-  border-color: rgba(0, 230, 200, .4);
+  border-color: rgba(0, 230, 200, .45);
+  background: rgba(0, 230, 200, .1);
 }
 
 .act-btn.btn-slow {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .act-btn.btn-slow.playing {
@@ -815,8 +894,10 @@ main {
   border-color: rgba(108, 99, 255, .4);
 }
 
-.card-body {
-  padding: 12px;
+.act-btn.btn-del:active {
+  color: var(--err);
+  border-color: rgba(255, 90, 90, .4);
+  background: rgba(255, 90, 90, .1);
 }
 
 .card-thumb-row {
@@ -1173,17 +1254,60 @@ main {
   box-shadow: 0 0 8px rgba(0, 230, 200, .5);
 }
 
-/* Voice select */
+/* Voice select layout */
+.voice-s-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.voice-s-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .voice-select {
-  background: var(--card2);
-  color: var(--text);
-  border: 1px solid var(--border);
+  width: 100%;
+  background-color: #141c2e;
+  color: #f1f5f9;
+  border: 1px solid rgba(0, 230, 200, 0.35);
   border-radius: 12px;
-  padding: 6px 10px;
-  font-size: .8rem;
+  padding: 10px 14px;
+  font-size: .88rem;
   font-family: inherit;
+  font-weight: 500;
   outline: none;
-  max-width: 185px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2300e6c8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 15px;
+  padding-right: 38px;
+  transition: all .2s;
+  color-scheme: dark;
+}
+
+.voice-select:hover {
+  border-color: rgba(0, 230, 200, 0.6);
+  background-color: #1a253e;
+}
+
+.voice-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 230, 200, 0.2);
+}
+
+.voice-select option {
+  background-color: #111827;
+  color: #f1f5f9;
+  font-size: .88rem;
+  padding: 10px 14px;
 }
 
 .btn-test-voice {

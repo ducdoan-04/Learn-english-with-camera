@@ -49,8 +49,8 @@
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-title">⚙️ Cài đặt</div>
-      <div class="s-row">
-        <div>
+      <div class="s-row voice-s-row">
+        <div class="voice-s-header">
           <div class="s-label">🗣️ Giọng đọc AI</div>
           <div class="s-sub">Chọn giọng cho bé hoặc người lớn</div>
         </div>
@@ -148,17 +148,17 @@
       <!-- Overlay -->
       <div class="cam-overlay" id="camOverlay" style="display:none;">
         <div class="frame-mode-bar">
-          <button class="f-mode-btn" id="fModeWord" onclick="setFrameMode('word')">🔤 1 Từ đơn</button>
-          <button class="f-mode-btn active" id="fModeSentence" onclick="setFrameMode('sentence')">📝 Cả câu</button>
+          <button class="f-mode-btn active" id="fModeWord" onclick="setFrameMode('word')">🔤 1 Từ đơn</button>
+          <button class="f-mode-btn" id="fModeSentence" onclick="setFrameMode('sentence')">📝 Cả câu</button>
         </div>
         <span class="cam-label" id="camLabel" style="display:none;"></span>
-        <div class="scan-frame" id="scanFrame">
+        <div class="scan-frame word-mode" id="scanFrame">
           <div class="corner-box cb-tl"></div>
           <div class="corner-box cb-tr"></div>
           <div class="corner-box cb-bl"></div>
           <div class="corner-box cb-br"></div>
           <div class="scan-line" id="scanLine"></div>
-          <div class="frame-hint" id="frameHint">🎯 CHỈ QUÉT CHỮ TRONG Ô NÀY</div>
+          <div class="frame-hint" id="frameHint">🎯 1 TỪ / 1 DÒNG</div>
         </div>
         <div class="auto-badge" id="autoBadge">
           <div class="pulse-dot"></div>
