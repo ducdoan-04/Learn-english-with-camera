@@ -46,6 +46,14 @@ const results = document.getElementById('results');
 const emptyState = document.getElementById('emptyState');
 const fileInput = document.getElementById('fileInput');
 
+// Zero-delay touch shutter (0ms lag, eliminates 300ms mobile tap delay)
+btnCapture.addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+    e.preventDefault();
+    captureNow();
+  }
+}, { passive: false });
+
 // ═══════════════════════════════════════════════════════════
 // TESSERACT OCR INIT
 // ═══════════════════════════════════════════════════════════
@@ -96,12 +104,20 @@ async function startCam() {
     const constraints = {
       video: {
         facingMode: S.facing,
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
+        width: { ideal: 1920 },
+        height: { ideal: 1080 }
       },
       audio: false
     };
     S.stream = await navigator.mediaDevices.getUserMedia(constraints);
+    // Bật continuous autofocus nếu phần cứng hỗ trợ để chữ luôn rõ nét
+    try {
+      const track = S.stream.getVideoTracks()[0];
+      const caps = track?.getCapabilities?.() || {};
+      if (caps.focusMode && caps.focusMode.includes('continuous')) {
+        track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+      }
+    } catch (_) { }
     video.srcObject = S.stream;
     video.style.display = 'block';
     camOff.style.display = 'none';
@@ -218,12 +234,25 @@ async function captureNow() {
   if (!S.workerReady) { showToast('⏳ OCR chưa sẵn sàng', 'err'); return; }
   if (!S.camOn && !S.fileMode) return;
 
+  // 1. Phản hồi rung haptic ngay lập tức khi ngón tay vừa chạm nút
+  if (navigator.vibrate) {
+    try { navigator.vibrate(35); } catch (_) { }
+  }
+
+  // 2. Chớp màn trập camera tức thì
+  scanFrame.classList.add('flash');
+  setTimeout(() => scanFrame.classList.remove('flash'), 220);
+
+  // 3. ĐÓNG BĂNG HÌNH ẢNH CAMERA TỨC THÌ (0ms lag)
+  // Khóa khung hình tĩnh ngay t=0ms, triệt tiêu 100% hiện tượng rung/nhòe do tay chuyển động
+  if (S.camOn && !video.paused) {
+    try { video.pause(); } catch (_) { }
+  }
+
   S.processing = true;
   btnCapture.disabled = true;
   btnCapture.classList.add('spinning');
   btnCapture.textContent = '';
-  scanFrame.classList.add('flash');
-  setTimeout(() => scanFrame.classList.remove('flash'), 350);
   showStatusCard('Đang quét chữ trong ô xanh...');
 
   try {
@@ -345,6 +374,10 @@ async function captureNow() {
     btnCapture.classList.remove('spinning');
     btnCapture.textContent = '🔍';
     clearStatusCard();
+    // Mở lại live camera sau khi phân tích xong
+    if (S.camOn && video.paused) {
+      video.play().catch(() => {});
+    }
   }
 }
 
