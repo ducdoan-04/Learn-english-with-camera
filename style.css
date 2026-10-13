@@ -790,8 +790,9 @@ main {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  overflow: hidden;
+  overflow: visible;
   animation: slideUp .3s ease;
+  position: relative;
 }
 
 @keyframes slideUp {
@@ -911,7 +912,7 @@ main {
   display: flex;
   gap: 12px;
   padding: 12px 14px;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: space-between;
 }
 
@@ -927,10 +928,11 @@ main {
   gap: 8px;
   align-items: center;
   justify-content: center;
-  align-self: center;
+  align-self: flex-start;
   flex-shrink: 0;
   padding-left: 10px;
   border-left: 1px solid rgba(255, 255, 255, 0.08);
+  min-height: 72px;
 }
 
 .act-btn {
