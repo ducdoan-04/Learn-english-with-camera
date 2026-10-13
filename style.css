@@ -622,6 +622,81 @@ main {
   transform: scale(.88) rotate(180deg);
 }
 
+/* ── Type input bar ─────────────────────────────────────── */
+.type-bar {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  background: rgba(10, 14, 26, 0.88);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(14px);
+}
+
+.type-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 0 4px 0 14px;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.type-inner:focus-within {
+  border-color: rgba(0, 230, 200, 0.5);
+  box-shadow: 0 0 0 3px rgba(0, 230, 200, 0.1);
+}
+
+.type-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: .9rem;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-weight: 500;
+  padding: 10px 0;
+  caret-color: var(--accent);
+}
+
+.type-input::placeholder {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: .82rem;
+}
+
+.type-submit-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), #00b8a2);
+  border: none;
+  color: #0a0e1a;
+  font-size: 1.05rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform .15s, opacity .15s;
+  touch-action: manipulation;
+}
+
+.type-submit-btn:hover {
+  opacity: .9;
+}
+
+.type-submit-btn:active {
+  transform: scale(.88);
+}
+
+.type-submit-btn.loading {
+  animation: spinBtn .8s linear infinite;
+  opacity: .7;
+}
+
 /* ── Results ─────────────────────────────────────────────── */
 .results {
   flex: 1;

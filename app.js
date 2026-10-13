@@ -415,6 +415,64 @@ function similar(a, b) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// MANUAL TEXT INPUT
+// ═══════════════════════════════════════════════════════════
+async function submitText() {
+  const input = document.getElementById('typeInput');
+  if (!input) return;
+  const rawVal = input.value.trim();
+  if (!rawVal) {
+    input.focus();
+    return;
+  }
+
+  // Allow any text (not just English)
+  const text = rawVal.replace(/\s+/g, ' ').trim().slice(0, 400);
+  if (!text) return;
+
+  const btn = document.querySelector('.type-submit-btn');
+  if (btn) { btn.classList.add('loading'); btn.textContent = '…'; }
+  input.disabled = true;
+
+  try {
+    updateStatusCard('Đang dịch và tra từ...');
+
+    let vi = '';
+    if (S.cfg.autoTranslate) {
+      vi = await translate(text);
+    }
+
+    const r = {
+      id: Date.now(),
+      english: text,
+      vietnamese: vi,
+      confidence: 100,
+      pinned: S.cfg.autoPin,
+      thumb: null,
+      source: 'typed',
+      time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    S.results.unshift(r);
+    renderCard(r);
+
+    if (S.cfg.autoRead) setTimeout(() => speak(text, r.id), 200);
+    showToast('✅ Đã tra từ!', 'ok');
+
+    input.value = '';
+    clearStatusCard();
+  } catch (err) {
+    console.error(err);
+    showToast('❌ ' + (err.message || 'Lỗi, thử lại'), 'err');
+    clearStatusCard();
+  } finally {
+    if (btn) { btn.classList.remove('loading'); btn.textContent = '→'; }
+    input.disabled = false;
+    input.focus();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // TRANSLATION (GOOGLE TRANSLATE API + FALLBACK)
 // ═══════════════════════════════════════════════════════════
 async function translate(text) {
@@ -709,9 +767,9 @@ function renderCard(r) {
   el.id = `c${r.id}`;
   el.innerHTML = `
     <div class="card-head">
-      <span class="badge">🇬🇧 Tiếng Anh</span>
+      <span class="badge">${r.source === 'typed' ? '✏️ Nhập tay' : '🇬🇧 Tiếng Anh'}</span>
       <div class="card-head-right">
-        <span class="conf ${cls}">${lbl} ${r.confidence}%</span>
+        ${r.source === 'typed' ? '' : `<span class="conf ${cls}">${lbl} ${r.confidence}%</span>`}
         <div class="head-act-btn ${r.pinned ? 'pinned' : ''}" data-pin="${r.id}" onclick="togglePin(${r.id})" title="Ghim">${r.pinned ? '📌' : '📍'}</div>
         <div class="head-act-btn btn-del" onclick="delCard(${r.id})" title="Xóa">🗑</div>
       </div>

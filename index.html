@@ -189,12 +189,33 @@
       </button>
     </div>
 
+    <!-- Text input bar -->
+    <div class="type-bar">
+      <div class="type-inner">
+        <input
+          type="text"
+          id="typeInput"
+          class="type-input"
+          placeholder="✏️ Nhập từ / câu tiếng Anh rồi nhấn ↵"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          inputmode="text"
+          onkeydown="if(event.key==='Enter')submitText()"
+        />
+        <button class="type-submit-btn" onclick="submitText()" title="Tra từ">
+          <span>→</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Results -->
     <div class="results" id="results">
       <div class="empty" id="emptyState">
         <div class="empty-icon">🔍</div>
         <h3>Chưa có kết quả</h3>
-        <p>Bật camera, trỏ vào chữ tiếng Anh rồi nhấn 🔍 để quét!</p>
+        <p>Bật camera quét chữ, hoặc <strong>nhập từ</strong> vào ô phía trên!</p>
       </div>
     </div>
 
