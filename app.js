@@ -15,12 +15,15 @@ const S = {
   countdownTimer: null,
   results: [],
   fileMode: false,
+  activeTab: 'type',
   cfg: {
     autoRead: true,
     autoTranslate: true,
     autoPin: false,
     speed: 0.85,
-    voicePersona: 'google'
+    voicePersona: 'google',
+    saveHistory: true,
+    fontSize: 'md'
   }
 };
 
@@ -964,14 +967,81 @@ function tog(k, el) {
 
 function setSpeed(v) {
   S.cfg.speed = parseFloat(v);
-  speak('Hello', null);
+  const lbl = document.getElementById('speedVal');
+  if (lbl) lbl.textContent = parseFloat(v).toFixed(2).replace('.00','');
 }
 
 function setInterval_(v) {
   S.autoSeconds = parseInt(v);
+  const lbl = document.getElementById('intervalVal');
+  if (lbl) lbl.textContent = v;
   if (S.autoOn) {
     S.countdown = S.autoSeconds;
   }
+}
+
+// ═══════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════
+function switchTab(tab) {
+  S.activeTab = tab;
+  const tabType   = document.getElementById('tabType');
+  const tabCam    = document.getElementById('tabCam');
+  const panelType = document.getElementById('panelType');
+  const panelCam  = document.getElementById('panelCam');
+
+  if (tab === 'type') {
+    tabType.classList.add('active');
+    tabCam.classList.remove('active');
+    panelType.classList.remove('hidden');
+    panelCam.classList.add('hidden');
+    setTimeout(() => {
+      const inp = document.getElementById('typeInput');
+      if (inp) inp.focus();
+    }, 150);
+  } else {
+    tabCam.classList.add('active');
+    tabType.classList.remove('active');
+    panelCam.classList.remove('hidden');
+    panelType.classList.add('hidden');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// FONT SIZE
+// ═══════════════════════════════════════════════════════════
+function setFontSize(size) {
+  S.cfg.fontSize = size;
+  document.body.classList.remove('fs-sm', 'fs-lg');
+  if (size !== 'md') document.body.classList.add('fs-' + size);
+  document.querySelectorAll('.fs-btn').forEach((b, i) => {
+    const sizes = ['sm', 'md', 'lg'];
+    b.classList.toggle('active', sizes[i] === size);
+  });
+  showToast('Cỡ chữ: ' + (size === 'sm' ? 'Nhỏ' : size === 'lg' ? 'Lớn' : 'Bình thường'));
+}
+
+// ═══════════════════════════════════════════════════════════
+// EXPORT HISTORY
+// ═══════════════════════════════════════════════════════════
+function exportHistory() {
+  if (!S.results.length) {
+    showToast('Chưa có kết quả để xuất', 'err');
+    return;
+  }
+  const lines = S.results.map(r => {
+    const vi  = r.vietnamese ? ` → ${r.vietnamese}` : '';
+    const src = r.source === 'typed' ? '[Nhập]' : '[Quét]';
+    return `${src} ${r.english}${vi}`;
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `scanspeak_${new Date().toISOString().slice(0, 10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`📤 Đã xuất ${S.results.length} từ`, 'ok');
 }
 
 // ═══════════════════════════════════════════════════════════

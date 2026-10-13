@@ -153,6 +153,60 @@ header {
   background: rgba(0, 230, 200, .08);
 }
 
+/* ── Tab Bar ────────────────────────────────────────────── */
+.tab-bar {
+  flex-shrink: 0;
+  display: flex;
+  background: rgba(10, 14, 26, 0.95);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  gap: 4px;
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 42px;
+  background: transparent;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  color: var(--text2);
+  font-size: .78rem;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all .22s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  margin-bottom: -1px;
+}
+
+.tab-btn .tab-icon {
+  font-size: .9rem;
+}
+
+.tab-btn:active {
+  opacity: .7;
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  background: rgba(0, 230, 200, 0.04);
+}
+
+/* ── Tab Panels ─────────────────────────────────────────── */
+.tab-panel {
+  flex-shrink: 0;
+}
+
+.tab-panel.hidden {
+  display: none;
+}
+
 /* ── Main ───────────────────────────────────────────────── */
 main {
   position: relative;
@@ -163,6 +217,7 @@ main {
   flex-direction: column;
   overflow: hidden;
 }
+
 
 /* ── Camera ─────────────────────────────────────────────── */
 .cam-section {
@@ -1464,3 +1519,116 @@ main {
 #ocrCanvas {
   display: none;
 }
+
+/* ── Settings section labels ────────────────────────────── */
+.s-section-label {
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 6px 0 8px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+.s-section-label:first-of-type {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* ── Font size buttons ──────────────────────────────────── */
+.font-size-btns {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.fs-btn {
+  width: 30px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all .18s;
+}
+
+.fs-btn:nth-child(1) { font-size: .7rem; }
+.fs-btn:nth-child(2) { font-size: .9rem; }
+.fs-btn:nth-child(3) { font-size: 1.05rem; }
+
+.fs-btn.active {
+  background: rgba(0, 230, 200, .12);
+  border-color: rgba(0, 230, 200, .4);
+  color: var(--accent);
+}
+
+.fs-btn:active {
+  transform: scale(.9);
+}
+
+/* ── Action buttons in settings ─────────────────────────── */
+.btn-action-sm {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text2);
+  font-size: .76rem;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+
+.btn-action-sm:active {
+  transform: scale(.95);
+  background: var(--card2);
+}
+
+.btn-danger-sm {
+  color: var(--err);
+  border-color: rgba(255, 90, 90, .3);
+}
+
+.btn-danger-sm:active {
+  background: rgba(255, 90, 90, .1);
+}
+
+/* ── Type bar full (tab view) ───────────────────────────── */
+.type-bar-full {
+  padding: 12px 14px;
+  background: transparent;
+  border-bottom: none;
+  backdrop-filter: none;
+}
+
+.type-bar-full .type-inner {
+  border-radius: 16px;
+  padding: 0 6px 0 16px;
+}
+
+.type-bar-full .type-input {
+  font-size: .95rem;
+  padding: 13px 0;
+}
+
+.type-bar-full .type-submit-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-size: 1.15rem;
+}
+
+/* ── Card font size variants ────────────────────────────── */
+body.fs-sm .en-text { font-size: .95rem; }
+body.fs-lg .en-text { font-size: 1.4rem; }
+

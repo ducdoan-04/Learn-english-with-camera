@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>ScanSpeak – Học Tiếng Anh Qua Camera</title>
-  <meta name="description" content="Trỏ camera vào chữ tiếng Anh, ứng dụng tự đọc to và dịch sang tiếng Việt." />
+  <meta name="description" content="Tra từ tiếng Anh bằng cách nhập hoặc quét camera, tự động dịch và đọc to." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -28,9 +28,8 @@
   <div class="toast" id="toast"></div>
 
   <!-- ══════════════════════════════════════════════════════════
-     HTTPS NOTICE (shown when not on secure context on mobile)
+     CAMERA PERMISSION NOTICE
      ══════════════════════════════════════════════════════════ -->
-  <!-- Camera Permission Notice (shown only if camera is denied) -->
   <div class="https-notice hidden" id="httpsNotice">
     <div class="https-icon">📷</div>
     <div class="https-title">Chưa cấp quyền Camera</div>
@@ -49,14 +48,17 @@
     <div class="sheet-bg" onclick="closeSettings()"></div>
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <div class="sheet-title">⚙️ Cài đặt</div>
+      <div class="sheet-title">⚙️ Cài đặt ứng dụng</div>
+
+      <!-- GIỌNG ĐỌC -->
+      <div class="s-section-label">🎙️ Giọng đọc</div>
       <div class="s-row voice-s-row">
         <div class="voice-s-header">
-          <div class="s-label">🗣️ Giọng đọc AI</div>
-          <div class="s-sub">Chọn giọng cho bé hoặc người lớn</div>
+          <div class="s-label">🗣️ Giọng AI</div>
+          <div class="s-sub">Chọn giọng đọc tiếng Anh</div>
         </div>
         <select class="voice-select" id="voicePersona" onchange="setVoicePersona(this.value)">
-          <option value="google" selected>🌐 Google Dịch (Chuẩn quốc tế, tự nhiên nhất)</option>
+          <option value="google" selected>🌐 Google Dịch (Tự nhiên nhất)</option>
           <option value="female">👩‍🏫 Cô giáo (Chuẩn Mỹ, rõ ràng)</option>
           <option value="kids">👧 Trẻ em (Trong trẻo, đọc chậm)</option>
           <option value="male">👨‍🏫 Thầy giáo (Trầm ấm, chuẩn Mỹ)</option>
@@ -69,12 +71,23 @@
       <div class="s-row">
         <div>
           <div class="s-label">🔊 Tự động đọc</div>
-          <div class="s-sub">Đọc ngay sau khi quét</div>
+          <div class="s-sub">Đọc ngay sau khi quét / nhập</div>
         </div>
         <div class="toggle on" id="togRead" onclick="tog('autoRead',this)">
           <div class="toggle-k"></div>
         </div>
       </div>
+      <div class="s-row">
+        <div>
+          <div class="s-label">🇬🇧 Tốc độ đọc</div>
+          <div class="s-sub">Chậm ↔ Nhanh (<span id="speedVal">0.85</span>x)</div>
+        </div>
+        <input type="range" class="speed-slider" id="speedSlider" min="0.5" max="1.5" step="0.1" value="0.85"
+          oninput="setSpeed(this.value)" />
+      </div>
+
+      <!-- DỊCH THUẬT -->
+      <div class="s-section-label" style="margin-top:4px;">🌐 Dịch thuật</div>
       <div class="s-row">
         <div>
           <div class="s-label">🌐 Dịch tự động</div>
@@ -84,18 +97,13 @@
           <div class="toggle-k"></div>
         </div>
       </div>
-      <div class="s-row">
-        <div>
-          <div class="s-label">🇬🇧 Tốc độ giọng đọc</div>
-          <div class="s-sub">Chậm ↔ Nhanh</div>
-        </div>
-        <input type="range" class="speed-slider" id="speedSlider" min="0.5" max="1.5" step="0.1" value="0.85"
-          oninput="setSpeed(this.value)" />
-      </div>
+
+      <!-- CAMERA -->
+      <div class="s-section-label" style="margin-top:4px;">📷 Camera & Quét</div>
       <div class="s-row">
         <div>
           <div class="s-label">⏱ Khoảng quét tự động</div>
-          <div class="s-sub">Giây giữa mỗi lần quét</div>
+          <div class="s-sub">Giây giữa mỗi lần quét (<span id="intervalVal">4</span>s)</div>
         </div>
         <input type="range" class="speed-slider" id="autoInterval" min="2" max="8" step="1" value="4"
           oninput="setInterval_(this.value)" />
@@ -109,6 +117,37 @@
           <div class="toggle-k"></div>
         </div>
       </div>
+
+      <!-- HIỂN THỊ -->
+      <div class="s-section-label" style="margin-top:4px;">🎨 Hiển thị</div>
+      <div class="s-row">
+        <div>
+          <div class="s-label">🔤 Cỡ chữ thẻ từ</div>
+          <div class="s-sub">Nhỏ ↔ Lớn</div>
+        </div>
+        <div class="font-size-btns">
+          <button class="fs-btn" onclick="setFontSize('sm')">A</button>
+          <button class="fs-btn active" onclick="setFontSize('md')">A</button>
+          <button class="fs-btn" onclick="setFontSize('lg')">A</button>
+        </div>
+      </div>
+
+      <!-- DỮ LIỆU -->
+      <div class="s-section-label" style="margin-top:4px;">💾 Dữ liệu</div>
+      <div class="s-row">
+        <div>
+          <div class="s-label">💾 Lưu lịch sử</div>
+          <div class="s-sub">Tự lưu khi đóng app</div>
+        </div>
+        <div class="toggle on" id="togSaveHistory" onclick="tog('saveHistory',this)">
+          <div class="toggle-k"></div>
+        </div>
+      </div>
+      <div class="s-row" style="gap:8px;flex-wrap:wrap;">
+        <button class="btn-action-sm" onclick="exportHistory()">📤 Xuất danh sách</button>
+        <button class="btn-action-sm btn-danger-sm" onclick="clearAll();closeSettings()">🗑 Xóa lịch sử</button>
+      </div>
+
     </div>
   </div>
 
@@ -131,91 +170,106 @@
   </header>
 
   <!-- ══════════════════════════════════════════════════════════
+     TAB BAR
+     ══════════════════════════════════════════════════════════ -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tabType" onclick="switchTab('type')">
+      <span class="tab-icon">✏️</span>
+      <span class="tab-label">Nhập từ</span>
+    </button>
+    <button class="tab-btn" id="tabCam" onclick="switchTab('cam')">
+      <span class="tab-icon">📷</span>
+      <span class="tab-label">Quét camera</span>
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
      MAIN
      ══════════════════════════════════════════════════════════ -->
   <main>
 
-    <!-- Camera section -->
-    <div class="cam-section">
-
-      <!-- Off placeholder -->
-      <div class="cam-off" id="camOff">
-        <div class="cam-off-icon">📷</div>
-        <p>Nhấn <strong>Bật camera</strong> rồi nhấn nút quét hoặc bật <strong>Tự động</strong></p>
-      </div>
-
-      <!-- Live video -->
-      <video id="video" autoplay playsinline muted style="display:none;"></video>
-
-      <!-- Overlay -->
-      <div class="cam-overlay" id="camOverlay" style="display:none;">
-        <div class="frame-mode-bar">
-          <button class="f-mode-btn active" id="fModeWord" onclick="setFrameMode('word')">🔤 1 Từ đơn</button>
-          <button class="f-mode-btn" id="fModeSentence" onclick="setFrameMode('sentence')">📝 Cả câu</button>
-        </div>
-        <span class="cam-label" id="camLabel" style="display:none;"></span>
-        <div class="scan-frame word-mode" id="scanFrame">
-          <div class="corner-box cb-tl"></div>
-          <div class="corner-box cb-tr"></div>
-          <div class="corner-box cb-bl"></div>
-          <div class="corner-box cb-br"></div>
-          <div class="scan-line" id="scanLine"></div>
-          <div class="frame-hint" id="frameHint">🎯 1 TỪ / 1 DÒNG</div>
-        </div>
-        <div class="auto-badge" id="autoBadge">
-          <div class="pulse-dot"></div>
-          <span id="autoCountdown">Tự động quét</span>
+    <!-- ── TAB: NHẬP TỪ (mặc định) ─────────────────────── -->
+    <div class="tab-panel" id="panelType">
+      <div class="type-bar type-bar-full">
+        <div class="type-inner">
+          <input
+            type="text"
+            id="typeInput"
+            class="type-input"
+            placeholder="Nhập từ hoặc câu tiếng Anh..."
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            inputmode="text"
+            onkeydown="if(event.key==='Enter')submitText()"
+          />
+          <button class="type-submit-btn" onclick="submitText()" title="Tra từ">
+            <span>→</span>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Controls bar -->
-    <div class="ctrl-bar">
-      <!-- Start/stop camera -->
-      <button class="btn-cam" id="btnCam" onclick="toggleCam()">
-        <span id="btnCamIcon">📷</span>
-        <span id="btnCamText">Bật camera</span>
-      </button>
+    <!-- ── TAB: QUÉT CAMERA ──────────────────────────────── -->
+    <div class="tab-panel hidden" id="panelCam">
 
-      <!-- Main capture -->
-      <button class="btn-capture" id="btnCapture" onclick="captureNow()" disabled title="Quét ngay">
-        🔍
-      </button>
+      <!-- Camera section -->
+      <div class="cam-section">
+        <!-- Off placeholder -->
+        <div class="cam-off" id="camOff">
+          <div class="cam-off-icon">📷</div>
+          <p>Nhấn <strong>Bật camera</strong> rồi nhấn nút quét hoặc bật <strong>Tự động</strong></p>
+        </div>
 
-      <!-- Auto toggle -->
-      <button class="btn-auto" id="btnAuto" onclick="toggleAuto()" disabled>
-        <span>⚡</span>
-        <span id="btnAutoText">Tự động</span>
-      </button>
-    </div>
+        <!-- Live video -->
+        <video id="video" autoplay playsinline muted style="display:none;"></video>
 
-    <!-- Text input bar -->
-    <div class="type-bar">
-      <div class="type-inner">
-        <input
-          type="text"
-          id="typeInput"
-          class="type-input"
-          placeholder="✏️ Nhập từ / câu tiếng Anh rồi nhấn ↵"
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
-          inputmode="text"
-          onkeydown="if(event.key==='Enter')submitText()"
-        />
-        <button class="type-submit-btn" onclick="submitText()" title="Tra từ">
-          <span>→</span>
+        <!-- Overlay -->
+        <div class="cam-overlay" id="camOverlay" style="display:none;">
+          <div class="frame-mode-bar">
+            <button class="f-mode-btn active" id="fModeWord" onclick="setFrameMode('word')">🔤 1 Từ đơn</button>
+            <button class="f-mode-btn" id="fModeSentence" onclick="setFrameMode('sentence')">📝 Cả câu</button>
+          </div>
+          <span class="cam-label" id="camLabel" style="display:none;"></span>
+          <div class="scan-frame word-mode" id="scanFrame">
+            <div class="corner-box cb-tl"></div>
+            <div class="corner-box cb-tr"></div>
+            <div class="corner-box cb-bl"></div>
+            <div class="corner-box cb-br"></div>
+            <div class="scan-line" id="scanLine"></div>
+            <div class="frame-hint" id="frameHint">🎯 1 TỪ / 1 DÒNG</div>
+          </div>
+          <div class="auto-badge" id="autoBadge">
+            <div class="pulse-dot"></div>
+            <span id="autoCountdown">Tự động quét</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls bar -->
+      <div class="ctrl-bar">
+        <button class="btn-cam" id="btnCam" onclick="toggleCam()">
+          <span id="btnCamIcon">📷</span>
+          <span id="btnCamText">Bật camera</span>
+        </button>
+        <button class="btn-capture" id="btnCapture" onclick="captureNow()" disabled title="Quét ngay">
+          🔍
+        </button>
+        <button class="btn-auto" id="btnAuto" onclick="toggleAuto()" disabled>
+          <span>⚡</span>
+          <span id="btnAutoText">Tự động</span>
         </button>
       </div>
+
     </div>
 
-    <!-- Results -->
+    <!-- Results (chung cho cả 2 tab) -->
     <div class="results" id="results">
       <div class="empty" id="emptyState">
-        <div class="empty-icon">🔍</div>
+        <div class="empty-icon">📖</div>
         <h3>Chưa có kết quả</h3>
-        <p>Bật camera quét chữ, hoặc <strong>nhập từ</strong> vào ô phía trên!</p>
+        <p>Nhập từ tiếng Anh vào ô trên, hoặc chuyển tab <strong>Quét camera</strong> để quét!</p>
       </div>
     </div>
 
@@ -228,6 +282,7 @@
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <!-- Application Logic -->
   <script src="app.js"></script>
+
 </body>
 
 </html>
